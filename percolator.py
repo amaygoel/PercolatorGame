@@ -1,6 +1,7 @@
 import random
 import copy
-from util import *
+import time
+#hi
 class PercolationPlayer:
 	# `graph` is an instance of a Graph, `player` is an integer (0 or 1).
     # Should return a vertex `v` from graph.V where v.color == -1
@@ -22,25 +23,18 @@ class PercolationPlayer:
         #                     print("works")
         #                     return v
         # return random.choice([v for v in graph.V if v.color == player])
-        original = graph
+        
         percentage = -1
         bestVertex = None
-        for v in [i for i in graph.V if i.color == player]:
-            neighbors = Neighbors(graph, v)
-            print(neighbors)
-            for n in neighbors:
-                if n.color != player:
-                    print("WORKING")
-                    # Percolate(graph,v)
-                    wins = Benchmark(0, graph)
-                    print(wins)
-                    if wins[0] > 60:
-                        bestVertex = v
-                        break
-                    if wins[0] > percentage:
-                        percentage = wins[0]
-                        bestVertex = v
-            graph = original
+        myV = [i for i in graph.V if i.color == player]
+        for v in myV:
+            graph_copy = copy.deepcopy(graph)
+            Percolate(graph_copy,v.index)
+            wins = Benchmark(1-player, graph_copy, .3/len(myV))
+            if wins[0] > percentage:
+                percentage = wins[0]
+                bestVertex = v
+           
         return bestVertex
             # run simulation for v which returns win percentage
 
@@ -85,11 +79,10 @@ def countEdges(graph, v):
     for e in graph.E:
         if (e.a == v or e.b == v):
             numEdges += 1
-    print("works2")
     return numEdges
 
-def Simulate(graph, active_player):
-    graph_copy = copy.deepcopy(graph)
+def Simulate(graph_copy, active_player):
+    
 
     # Phase 1: Coloring Phase
     while any(v.color == -1 for v in graph_copy.V):
@@ -114,7 +107,7 @@ def Simulate(graph, active_player):
         chosen_vertex = random.choice([v for v in graph_copy.V if v.color == active_player])
                 
         # If output is reasonable, remove ("percolate") this vertex + edges attached to it, as well as isolated vertices.
-        Percolate(graph_copy, chosen_vertex)
+        Percolate(graph_copy, chosen_vertex.index)
         # Only case when this should fire is if chosen_vertex.index does not exist or similar error.
         
         # Swap current player
@@ -123,40 +116,38 @@ def Simulate(graph, active_player):
     # Winner is the non-active player.
     return 1 - active_player
 
-def Benchmark(activePlayer, graph):
-    # graphs = (
-    #     BinomialRandomGraph(random.randint(1, 20), random.random())
-    #     # BinomialRandomGraph(2, random.random())
-    #     for _ in range(iters)
-    # )
-    # a = Vertex(0)
-    # b = Vertex(1)
-    # e = Edge(a,b)
-    # graphs = [Graph({a,b},{e})]
+def Benchmark(activePlayer, graph, timeBudget):
     wins = [0, 0]
-    # for graph in graphs:
-    # print(graph)
-    # g1 = copy.deepcopy(graph)
-    # g2 = copy.deepcopy(graph)
-    # Each player gets a chance to go first on each graph.
-    for i in range(100):
+    start = time.time()
+    elapsed = 0
+    while time.time() - start < timeBudget:
+
         winnerPlayer = Simulate(graph, activePlayer)
         wins[winnerPlayer] += 1
+
     # winner_b = PlayGraph(p2, p1, graph)
     # wins[1-winner_b] += 1
-    print(wins)
     return wins
 
 # Removes the given vertex v from the graph, as well as the edges attached to it.
 # Removes all isolated vertices from the graph as well.
-def Percolate(graph, v):
+def Percolate(graph, index):
+    v = None
+    for j in graph.V:
+        if j.index == index:
+            v = j
     # Get attached edges to this vertex, remove them.
-    for e in IncidentEdges(graph, v):
+    to_remove = set()
+    edges = IncidentEdges(graph, v)
+    for e in edges:
+        if countEdges(graph, e.a) == 1:
+            to_remove.add(e.a)
+        if countEdges(graph, e.b) == 1:
+            to_remove.add(e.b)
         graph.E.remove(e)
     # Remove this vertex.
     graph.V.remove(v)
-    # Remove all isolated vertices.
-    to_remove = {u for u in graph.V if len(IncidentEdges(graph, u)) == 0}
+    
     graph.V.difference_update(to_remove)
 
 # Returns the incident edges on a vertex.
