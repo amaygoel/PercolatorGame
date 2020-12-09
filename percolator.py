@@ -7,32 +7,26 @@ class PercolationPlayer:
     # Should return a vertex `v` from graph.V where v.color == -1
     def ChooseVertexToColor(graph, player):
         return random.choice([v for v in graph.V if v.color == -1])
-
+        # bestVertex = None
+        # mostEdges = 0
+        
+        # for v in 
 
     # `graph` is an instance of a Graph, `player` is an integer (0 or 1).
     # Should return a vertex `v` from graph.V where v.color == player
+
     def ChooseVertexToRemove(graph, player):
-        # for v in [i for i in graph.V if i.color == player]:
-        #     neighbors = Neighbors(graph, v)
-        #     print(v, neighbors)
-        #     for n in [i for i in neighbors if i.color == player]:
-        #         if countEdges(graph, n) != 1:
-        #             print("works")
-        #             for n in [i for i in neighbors if i.color != player]:
-        #                 if countEdges(graph, n) == 1:
-        #                     print("works")
-        #                     return v
-        # return random.choice([v for v in graph.V if v.color == player])
-        
-        percentage = -1
+        bestWinRate = 0.0
         bestVertex = None
         myV = [i for i in graph.V if i.color == player]
         for v in myV:
             graph_copy = copy.deepcopy(graph)
             Percolate(graph_copy,v.index)
             wins = Benchmark(1-player, graph_copy, .3/len(myV))
-            if wins[0] > percentage:
-                percentage = wins[0]
+            winRate = wins[player]/sum(wins)
+           
+            if winRate > bestWinRate:
+                bestWinRate = winRate
                 bestVertex = v
            
         return bestVertex
@@ -82,8 +76,6 @@ def countEdges(graph, v):
     return numEdges
 
 def Simulate(graph_copy, active_player):
-    
-
     # Phase 1: Coloring Phase
     while any(v.color == -1 for v in graph_copy.V):
         # First, try to just *run* the player's code to get their vertex.
@@ -138,12 +130,15 @@ def Percolate(graph, index):
             v = j
     # Get attached edges to this vertex, remove them.
     to_remove = set()
-    edges = IncidentEdges(graph, v)
-    for e in edges:
-        if countEdges(graph, e.a) == 1:
-            to_remove.add(e.a)
-        if countEdges(graph, e.b) == 1:
-            to_remove.add(e.b)
+    # edges = IncidentEdges(graph, v)
+    for e in [edges for edges in graph.E if (edges.a == v or edges.b == v)]:
+        neigbor = None
+        if e.a == v:
+            neighbor = e.b
+        else:
+            neighbor = e.a
+        if countEdges(graph, neighbor) == 1:
+            to_remove.add(neighbor)
         graph.E.remove(e)
     # Remove this vertex.
     graph.V.remove(v)
@@ -151,5 +146,5 @@ def Percolate(graph, index):
     graph.V.difference_update(to_remove)
 
 # Returns the incident edges on a vertex.
-def IncidentEdges(graph, v):
-    return [e for e in graph.E if (e.a == v or e.b == v)]
+# def IncidentEdges(graph, v):
+#     return [e for e in graph.E if (e.a == v or e.b == v)]
