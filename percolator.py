@@ -6,11 +6,15 @@ class PercolationPlayer:
 	# `graph` is an instance of a Graph, `player` is an integer (0 or 1).
     # Should return a vertex `v` from graph.V where v.color == -1
     def ChooseVertexToColor(graph, player):
-        return random.choice([v for v in graph.V if v.color == -1])
-        # bestVertex = None
-        # mostEdges = 0
-        
-        # for v in 
+        # return random.choice([v for v in graph.V if v.color == -1])
+        bestVertex = None
+        mostEdges = -1
+        for v in [i for i in graph.V if i.color == -1]:
+            edges = countEdges(graph, v)
+            if  edges > mostEdges:
+                mostEdges = edges
+                bestVertex = v
+        return bestVertex
 
     # `graph` is an instance of a Graph, `player` is an integer (0 or 1).
     # Should return a vertex `v` from graph.V where v.color == player
